@@ -30,7 +30,26 @@ app.get('/placar',(req,res)=>res.json(votes));
 app.listen(3000);
 // No frontend, troque localStorage por fetch('/votar').
 // Para produção use Firebase/Supabase com regras por IP + fingerprint + Cloudflare Turnstile.`]})]})]})}nf.createRoot(document.getElementById("root")).render(p(ef.default.StrictMode,{children:p(di,{})}));
-</script>
+
+  const express = require('express');
+const fs = require('fs');
+const app = express();
+app.use(express.json());
+app.use(express.static(__dirname));
+
+app.post('/api/votar', (req,res)=>{
+  const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.ip;
+  const dados = JSON.parse(fs.readFileSync('votos.json'));
+  if(dados.ips.includes(ip)) return res.status(403).json({error:'IP já votou'});
+  dados[req.body.voto]++; dados.total++; dados.ips.push(ip);
+  fs.writeFileSync('votos.json', JSON.stringify(dados,null,2));
+  res.json(dados);
+});
+
+app.get('/votos.json',(req,res)=> res.json(JSON.parse(fs.readFileSync('votos.json'))));
+app.listen(3000);
+  
+  </script>
   <script>(function(){function m(a){var h=a.getAttribute("href");if(!h)return;try{var u=new URL(h,document.baseURI);if((u.protocol==="http:"||u.protocol==="https:")&&u.host!==location.host){a.target="_blank";a.rel="noopener noreferrer";}}catch(e){}}function s(){document.querySelectorAll("a[href]").forEach(m);}if(document.readyState!=="loading"){s();}else{document.addEventListener("DOMContentLoaded",s);}document.addEventListener("click",function(e){var a=e.target&&e.target.closest&&e.target.closest("a[href]");if(a){m(a);}},true);})();</script>
   <script type="application/json" data-clippy-inline-media-manifest="1">{"version":1,"slots":[]}</script>
 </body>
