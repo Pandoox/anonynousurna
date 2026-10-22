@@ -1,10 +1,22 @@
+let store = global.__URNA_STORE__;
+if(!store){
+  global.__URNA_STORE__ = { "13":0,"22":0,"branco":0,"nulo":0,"total":0,"ips":[],"logs":[] };
+  store = global.__URNA_STORE__;
+}
 
-{
-  "13": 0,
-  "22": 0,
-  "branco": 0,
-  "nulo": 0,
-  "total": 0,
-  "ips": [],
-  "logs": []
+// Se tiver KV configurado, use. Senão usa memória (funciona, mas pode resetar em cold start)
+let kv = null;
+try{ kv = require('@vercel/kv'); }catch{}
+
+module.exports = async (req,res)=>{
+  res.setHeader('Access-Control-Allow-Origin','*');
+  res.setHeader('Cache-Control','no-store');
+  
+  if(kv && process.env.KV_REST_API_URL){
+    try{
+      const data = await kv.kv.get('urna:votos');
+      if(data) return res.json(data);
+    }catch(e){}
+  }
+  res.json(store);
 }
