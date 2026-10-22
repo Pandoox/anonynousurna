@@ -1,14 +1,7 @@
-
 {
   "version": 2,
   "rewrites": [
-    {
-      "source": "/votos.json",
-      "destination": "/api/votos"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/api/index"
-    }
+    { "source": "/votos.json", "destination": "/api/votos" },
+    { "source": "/(.*)", "destination": "/api/index" }
   ]
 }
