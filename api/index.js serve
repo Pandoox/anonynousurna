@@ -1,0 +1,21 @@
+let kv=null; try{kv=require('@vercel/kv')}catch{}
+let mem=global.__URNA__||={"13":0,"22":0,branco:0,nulo:0,total:0,ips:[],logs:[]}
+global.__URNA__=mem
+module.exports=async(req,res)=>{
+  res.setHeader('Access-Control-Allow-Origin','*')
+  res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers','Content-Type')
+  if(req.method==='OPTIONS') return res.status(200).end()
+  let {voto,ip}=req.body||{}
+  let realIp=(req.headers['x-forwarded-for']?.split(',')[0]||ip||'unknown').trim()
+  if(!['13','22','branco','nulo'].includes(voto)) return res.status(400).json({error:'invalido'})
+  let dados=mem
+  if(kv&&process.env.KV_REST_API_URL){ const f=await kv.kv.get('urna:votos'); if(f) dados=f }
+  dados.ips=dados.ips||[]
+  if(dados.ips.includes(realIp)) return res.status(403).json({error:'já votou', placar:dados})
+  dados[voto]++; dados.total++; dados.ips.push(realIp)
+  dados.logs=[{id:Math.random().toString(36).slice(2,6).toUpperCase(),tipo:voto,hora:new Date().toLocaleTimeString('pt-BR'),ts:Date.now()},...dados.logs].slice(0,200)
+  global.__URNA__=dados
+  if(kv&&process.env.KV_REST_API_URL) await kv.kv.set('urna:votos',dados)
+  res.json({ok:true, placar:dados})
+}
